@@ -7,8 +7,11 @@ __pycache__/
 node_modules/
 .next/
 
-# Environment secrets — KABHI commit nahi karna
+# Environment variables
 .env
+.env.*
+!.env.example
+
 
 # OS junk
 .DS_Store
