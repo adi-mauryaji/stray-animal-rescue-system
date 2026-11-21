@@ -1,0 +1,6 @@
+{
+  "enabledPlugins": {
+    "pyright-lsp@anthropic-plugin-directory": true,
+    "typescript-lsp@anthropic-plugin-directory": true
+  }
+}
