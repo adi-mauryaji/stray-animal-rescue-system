@@ -1,0 +1,27 @@
+services:
+  db:
+    build: ./db
+    image: rescue-db:18-3.6
+    command: ["postgres", "-c", "shared_preload_libraries=pg_stat_statements"]
+    environment:
+      POSTGRES_DB: rescue
+      POSTGRES_USER: rescue
+      POSTGRES_PASSWORD_FILE: /run/secrets/db_password
+    secrets:
+      - db_password
+    volumes:
+      - pgdata:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U rescue -d rescue"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 15s
+    restart: unless-stopped
+
+secrets:
+  db_password:
+    file: ./secrets/db_password.txt
+
+volumes:
+  pgdata:
