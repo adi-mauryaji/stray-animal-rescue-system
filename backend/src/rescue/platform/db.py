@@ -6,10 +6,30 @@ so requests reuse them instead of opening a new one each time.
 
 from functools import lru_cache
 
-from sqlalchemy import text
+from sqlalchemy import MetaData, text
 from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine
+from sqlalchemy.orm import DeclarativeBase
 
 from rescue.platform.config import get_settings
+
+# Names Alembic gives indexes and constraints, so they match the hand-written
+# DDL of blueprint 11.1 instead of SQLAlchemy's defaults.
+NAMING_CONVENTION = {
+    "ix": "%(table_name)s_%(column_0_N_name)s_idx",
+    "uq": "%(table_name)s_%(column_0_N_name)s_key",
+    "ck": "%(table_name)s_%(constraint_name)s_check",
+    "fk": "%(table_name)s_%(column_0_N_name)s_fkey",
+    "pk": "%(table_name)s_pkey",
+}
+
+
+class Base(DeclarativeBase):
+    """Every module's models.py inherits from this (blueprint 12.1).
+
+    Alembic reads `Base.metadata` to compare models against the database.
+    """
+
+    metadata = MetaData(naming_convention=NAMING_CONVENTION)
 
 
 @lru_cache
