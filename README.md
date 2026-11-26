@@ -17,7 +17,7 @@ mkdir -p secrets && tr -dc 'A-Za-z0-9' </dev/urandom | head -c 32 > secrets/db_p
 docker compose up -d --wait db
 cp backend/.env.example backend/.env   # put the same password into DATABASE_URL
 uv sync --directory backend
-cd backend && uv run alembic upgrade head && uv run pytest
+cd backend && uv run alembic upgrade head && uv run python -m rescue.modules.orgs.regions && uv run pytest
 ```
 
 `secrets/` and `backend/.env` are gitignored and never leave your machine. The password generator avoids `/` and `+` on purpose, so it can be pasted into the URL without escaping.
@@ -38,7 +38,9 @@ cd backend && uv run uvicorn rescue.main:create_app --factory --reload
 |---|---|
 | `backend/src/rescue/main.py` | `create_app()`: app factory, lifespan, routes |
 | `backend/src/rescue/platform/` | cross-cutting plumbing: `config.py` (the only reader of the environment), `db.py` (engine, `Base`) |
+| `backend/src/rescue/modules/` | business modules, one database schema each; `orgs/regions.py` loads the region boundaries |
 | `backend/migrations/` | Alembic: `env.py` + one linear history in `versions/` |
+| `backend/seeds/regions/` | pilot region boundaries as GeoJSON (OpenStreetMap, ODbL) |
 | `backend/tests/` | pytest; `test_ready.py` needs the db container running |
 | `compose.yaml`, `compose.override.yaml`, `db/` | PostgreSQL 18 + PostGIS 3.6 + pgvector image and the dev stack |
 
