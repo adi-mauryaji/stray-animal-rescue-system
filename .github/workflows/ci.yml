@@ -1,0 +1,60 @@
+# Week 1 quality gate: lint, types, tests (blueprint 24.4 steps 1-2).
+# API-client diff, Trivy image scan, Playwright E2E and deploy come with M2.
+name: CI
+
+on:
+  push:
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    env:
+      # The CI database only ever exists inside this job.
+      DB_PASSWORD: ci-not-a-real-password
+    steps:
+      - uses: actions/checkout@v5
+
+      # Astral's own installer, so there is no action version to keep in sync.
+      - name: Install uv
+        run: |
+          curl -LsSf https://astral.sh/uv/install.sh | sh
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+
+      - name: Install dependencies (lockfile must match pyproject.toml)
+        run: uv sync --locked --directory backend
+
+      - name: Lint
+        run: |
+          uv run --directory backend ruff check .
+          uv run --directory backend ruff format --check .
+
+      # Same pyright version as the local pyright-lsp plugin; reads pyrightconfig.json.
+      - name: Types
+        run: npx -y pyright@1.1.414
+
+      - name: Start the database (PostGIS 3.6 + pgvector image built from db/)
+        run: |
+          mkdir -p secrets
+          printf '%s' "$DB_PASSWORD" > secrets/db_password.txt
+          docker compose up -d --wait db
+
+      - name: Migrate, test, and prove the downgrade works (blueprint 24.4)
+        env:
+          DATABASE_URL: "postgresql+asyncpg://rescue:ci-not-a-real-password@127.0.0.1:5432/rescue"
+        run: |
+          uv run --directory backend alembic upgrade head
+          uv run --directory backend pytest -q
+          uv run --directory backend alembic downgrade base
+          uv run --directory backend alembic upgrade head
+
+      - name: Database logs on failure
+        if: failure()
+        run: docker compose logs db
