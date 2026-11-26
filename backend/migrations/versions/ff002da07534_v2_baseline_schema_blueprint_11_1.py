@@ -11,7 +11,7 @@ Needs the custom image of Section 24.1: PostGIS 3.6, pgvector and
 pg_stat_statements in shared_preload_libraries.
 
 Revision ID: ff002da07534
-Revises: 
+Revises:
 Create Date: 2026-11-25 03:10:32.838828
 
 """

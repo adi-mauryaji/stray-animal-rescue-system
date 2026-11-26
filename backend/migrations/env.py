@@ -10,12 +10,12 @@ none in alembic.ini. Offline mode (`--sql`) prints the SQL without connecting.
 import asyncio
 from logging.config import fileConfig
 
+from alembic import context
 from geoalchemy2 import alembic_helpers
 from sqlalchemy import Connection
 from sqlalchemy.ext.asyncio import create_async_engine
 from sqlalchemy.pool import NullPool
 
-from alembic import context
 from rescue.platform.config import get_settings
 from rescue.platform.db import Base
 

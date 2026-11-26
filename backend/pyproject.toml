@@ -22,4 +22,21 @@ build-backend = "uv_build"
 [dependency-groups]
 dev = [
     "pytest>=9.2.0",
+    "ruff>=0.17.6",
 ]
+
+[tool.ruff]
+line-length = 100
+target-version = "py314"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+# E/W pycodestyle · F pyflakes · I import order · UP pyupgrade · B bugbear
+# SIM simplify · S security (blueprint 20.2, 22) · RUF ruff's own
+select = ["E", "W", "F", "I", "UP", "B", "SIM", "S", "RUF"]
+
+[tool.ruff.lint.per-file-ignores]
+# Tests assert, and talk to a throwaway database with a visible password.
+"tests/*" = ["S101", "S105", "S106"]
+# Migrations hold the blueprint's DDL verbatim: long lines stay as reviewed.
+"migrations/versions/*" = ["E501"]
